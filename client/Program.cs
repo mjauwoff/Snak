@@ -1,20 +1,32 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 
 var connection = new HubConnectionBuilder()
-	.WithUrl("http://localhost:1111/snakhub")
+	.WithUrl("http://localhost:5194/snakhub")
+	.WithAutomaticReconnect()
 	.Build();
 
 // Receive messages from server
 connection.On<string, string>("ReceiveMessage", (user, message) =>
 {
-	Console.WriteLine($"{user}: {message}");
+	Console.WriteLine($"\n{user}: {message}");
+	Console.Write("> ");
 });
 
 Console.Write("Enter your username: ");
 var username = Console.ReadLine() ?? "Anonymous";
 
-await connection.StartAsync();
-Console.WriteLine("Connected to chat!");
+try
+{
+	Console.WriteLine("Connecting to server...");
+	await connection.StartAsync();
+	Console.WriteLine("Connected to chat!");
+}
+catch (Exception ex)
+{
+	Console.WriteLine($"Failed to connect: {ex.Message}");
+	Console.WriteLine("Make sure the server is running!");
+	return;
+}
 
 while (true)
 {
@@ -24,8 +36,14 @@ while (true)
 	if (string.IsNullOrEmpty(input)) continue;
 	if (input == "/quit") break;
 
-	// Send message with username
-	await connection.SendAsync("SendMessage", username, input);
+	try
+	{
+		await connection.SendAsync("SendMessage", username, input);
+	}
+	catch (Exception ex)
+	{
+		Console.WriteLine($"Error sending message: {ex.Message}");
+	}
 }
 
 await connection.StopAsync();
