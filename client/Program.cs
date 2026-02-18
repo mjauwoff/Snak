@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 var connection = new HubConnectionBuilder()
 	.WithUrl("http://localhost:5194/snakhub")
@@ -10,6 +11,11 @@ connection.On<string, string>("ReceiveMessage", (user, message) =>
 {
 	Console.WriteLine($"\n{user}: {message}");
 	Console.Write("> ");
+
+	new ToastContentBuilder()
+	   .AddText($"{user}")
+	   .AddText(message)
+	   .Show();
 });
 
 Console.Write("Enter your username: ");
